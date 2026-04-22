@@ -230,6 +230,8 @@ type Settings = {
 	ctrlEnterToSend?: boolean;
 	renderMarkdownInPreviews?: boolean;
 	recentEmojis?: string[];
+	termsAcceptedAt?: number;
+	termsAcceptedVersion?: string;
 
 	system?: string;
 	seed?: number;
