@@ -60,7 +60,7 @@
 	let isAcceptingTerms = false;
 
 	let version;
-	const TERMS_AND_CONDITIONS_VERSION = 'dummy-v4';
+	const TERMS_AND_CONDITIONS_VERSION = 'v1.0.0';
 
 	const hasAcceptedCurrentTerms = (userSettings) =>
 		userSettings?.ui?.termsAcceptedVersion === TERMS_AND_CONDITIONS_VERSION;

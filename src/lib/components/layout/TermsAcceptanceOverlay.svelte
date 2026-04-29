@@ -25,8 +25,8 @@
 				</div>
 				<h1 class="mt-2 text-2xl font-semibold sm:text-3xl">Review and accept to continue</h1>
 				<p class="mt-2 max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-300">
-					This is a placeholder terms and conditions document for now. Acceptance is required once
-					before accessing the application.
+					OpenLLM is a pilot service run by SciLifeLab Data Centre providing access to
+					open-weight large language models.
 				</p>
 			</div>
 
@@ -34,30 +34,93 @@
 				<div
 					class="max-h-[52vh] overflow-y-auto rounded-[1.5rem] border border-black/10 bg-gray-50/80 p-5 text-sm leading-6 text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
 				>
-					<h2 class="text-base font-semibold text-black dark:text-white">
-						1. Placeholder agreement
+					<h2 class="text-base font-semibold text-black dark:text-white">What is this?</h2>
+					<p class="mt-2">
+						OpenLLM is a pilot service run by SciLifeLab Data Centre providing access to
+						open-weight large language models (LLMs) hosted on infrastructure controlled by
+						SciLifeLab. The service offers both a chat interface (Open WebUI) and API endpoints.
+						The pilot runs during spring 2026 with a limited group of users.
+					</p>
+					<p class="mt-2">
+						Our primary focus is enabling API-based access so that LLMs can be embedded in
+						research workflows, automation pipelines, and agentic tools. The chat interface is
+						available as a convenience, but the pilot is not optimized for users who only need a
+						ChatGPT-style experience.
+					</p>
+					<p class="mt-2">
+						The goal is to learn what use cases SciLifeLab-hosted LLMs can realistically support,
+						what infrastructure and expertise are needed, and what a future production service
+						could look like.
+					</p>
+
+					<h2 class="mt-5 text-base font-semibold text-black dark:text-white">
+						What you can use it for
+					</h2>
+					<ul class="mt-2 list-disc space-y-2 pl-5">
+						<li>Embedding LLMs in research workflows and pipelines via the API</li>
+						<li>Prototyping agentic tools and automations</li>
+						<li>
+							Working with data that should not leave SciLifeLab-controlled infrastructure (e.g.
+							internal code, non-public datasets, or information containing personal data that is
+							not patient/healthcare data)
+						</li>
+						<li>Evaluating open-weight models for your specific research or platform needs</li>
+					</ul>
+
+					<h2 class="mt-5 text-base font-semibold text-black dark:text-white">
+						What you should not use it for
+					</h2>
+					<ul class="mt-2 list-disc space-y-2 pl-5">
+						<li>Processing patient data or data classified above "internal" sensitivity</li>
+						<li>
+							Any use case that requires guaranteed uptime, latency, or throughput; this is a
+							pilot, not a production service
+						</li>
+						<li>Heavy sustained workloads that could degrade the service for other pilot users</li>
+						<li>
+							Anything that violates Swedish law, EU regulations, SciLifeLab policies, ethical
+							review board or research ethics committee decisions, or your university's own
+							policies
+						</li>
+					</ul>
+
+					<h2 class="mt-5 text-base font-semibold text-black dark:text-white">
+						Where does the data live?
 					</h2>
 					<p class="mt-2">
-						By continuing, you acknowledge that this is a temporary terms document used only to
-						support the current sign-in flow.
+						All models run on infrastructure controlled by SciLifeLab Data Centre, deployed on the
+						KTH Kubernetes cluster and SafeSpring cloud, located in Sweden. Your prompts and outputs
+						are processed on this infrastructure and are not sent to any third-party provider. We do
+						not train models on your data.
+					</p>
+					<p class="mt-2">
+						We may collect anonymized usage metrics (request counts, token volumes, latency) to
+						evaluate the pilot. We do not log prompt content beyond what is needed for debugging
+						during the pilot period.
 					</p>
 
-					<h2 class="mt-5 text-base font-semibold text-black dark:text-white">2. Acceptable use</h2>
-					<p class="mt-2">
-						Use the system responsibly, do not attempt to disrupt service availability, and do not
-						store or process content you are not authorized to handle.
-					</p>
+					<h2 class="mt-5 text-base font-semibold text-black dark:text-white">
+						What we do and do not promise
+					</h2>
+					<p class="mt-2 font-semibold text-black dark:text-white">We do:</p>
+					<ul class="mt-2 list-disc space-y-2 pl-5">
+						<li>Provide access to a curated set of small and medium-size open-weight LLMs</li>
+						<li>Make a reasonable effort to keep the service available during the pilot</li>
+						<li>Actively collect your feedback to shape future decisions</li>
+					</ul>
+					<p class="mt-4 font-semibold text-black dark:text-white">We do not:</p>
+					<ul class="mt-2 list-disc space-y-2 pl-5">
+						<li>Guarantee availability, performance, or specific model versions</li>
+						<li>Commit to continuing the service beyond the pilot period</li>
+						<li>Provide support equivalent to a production service</li>
+					</ul>
 
-					<h2 class="mt-5 text-base font-semibold text-black dark:text-white">3. Data handling</h2>
+					<h2 class="mt-5 text-base font-semibold text-black dark:text-white">Feedback</h2>
 					<p class="mt-2">
-						Data entered into the application may be stored, processed, logged, and reviewed by the
-						system operator for operational, security, and support purposes.
-					</p>
-
-					<h2 class="mt-5 text-base font-semibold text-black dark:text-white">4. No warranty</h2>
-					<p class="mt-2">
-						This placeholder agreement is provided as-is and may be replaced with a formal document
-						later. Continued use after future updates may require renewed acceptance.
+						Your input is the most valuable output of this pilot. Please share feedback, use cases,
+						issues, and ideas at
+						<a class="underline" href="mailto:serve@scilifelab.se">serve@scilifelab.se</a>
+						or through the channels provided to you when you joined the pilot.
 					</p>
 				</div>
 
