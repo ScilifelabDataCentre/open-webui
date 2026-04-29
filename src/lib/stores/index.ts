@@ -232,6 +232,8 @@ type Settings = {
 	renderMarkdownInPreviews?: boolean;
 	recentEmojis?: string[];
 	pinnedMenuItems?: string[];
+	termsAcceptedAt?: number;
+	termsAcceptedVersion?: string;
 
 	system?: string;
 	seed?: number;

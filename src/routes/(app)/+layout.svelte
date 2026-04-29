@@ -13,7 +13,8 @@
 	import { getTools } from '$lib/apis/tools';
 	import { getBanners } from '$lib/apis/configs';
 	import { getTerminalServers } from '$lib/apis/terminal';
-	import { getUserSettings } from '$lib/apis/users';
+	import { getUserSettings, updateUserSettings } from '$lib/apis/users';
+	import { userSignOut } from '$lib/apis/auths';
 
 	import { WEBUI_VERSION, WEBUI_API_BASE_URL } from '$lib/constants';
 	import { compareVersion } from '$lib/utils';
@@ -45,6 +46,7 @@
 	import SettingsModal from '$lib/components/chat/SettingsModal.svelte';
 	import ChangelogModal from '$lib/components/ChangelogModal.svelte';
 	import AccountPending from '$lib/components/layout/Overlay/AccountPending.svelte';
+	import TermsAcceptanceOverlay from '$lib/components/layout/TermsAcceptanceOverlay.svelte';
 	import UpdateInfoToast from '$lib/components/layout/UpdateInfoToast.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import { Shortcut, shortcuts } from '$lib/shortcuts';
@@ -54,8 +56,14 @@
 	let loaded = false;
 	let DB = null;
 	let localDBChats = [];
+	let showTermsAcceptance = false;
+	let isAcceptingTerms = false;
 
 	let version;
+	const TERMS_AND_CONDITIONS_VERSION = 'v1.0.0';
+
+	const hasAcceptedCurrentTerms = (userSettings) =>
+		userSettings?.ui?.termsAcceptedVersion === TERMS_AND_CONDITIONS_VERSION;
 
 	const clearChatInputStorage = () => {
 		const chatInputKeys = Object.keys(localStorage).filter((key) => key.startsWith('chat-input'));
@@ -81,7 +89,7 @@
 			if (localDBChats.length === 0) {
 				await deleteDB('Chats');
 			}
-		} catch (error) {
+		} catch {
 			// IndexedDB Not Found
 		}
 	};
@@ -104,6 +112,8 @@
 		if (userSettings?.ui) {
 			settings.set(userSettings.ui);
 		}
+
+		showTermsAcceptance = !hasAcceptedCurrentTerms(userSettings);
 
 		if (cb) {
 			await cb();
@@ -367,12 +377,54 @@
 	});
 
 	const checkForVersionUpdates = async () => {
-		version = await getVersionUpdates(localStorage.token).catch((error) => {
+		version = await getVersionUpdates(localStorage.token).catch(() => {
 			return {
 				current: WEBUI_VERSION,
 				latest: WEBUI_VERSION
 			};
 		});
+	};
+
+	const acceptTermsAndConditions = async () => {
+		if (!localStorage.token || isAcceptingTerms) {
+			return;
+		}
+
+		isAcceptingTerms = true;
+
+		const nextUiSettings = {
+			...($settings ?? {}),
+			termsAcceptedAt: Date.now(),
+			termsAcceptedVersion: TERMS_AND_CONDITIONS_VERSION
+		};
+
+		const updatedUserSettings = await updateUserSettings(localStorage.token, {
+			ui: nextUiSettings
+		}).catch((error) => {
+			toast.error(`${error}`);
+			return null;
+		});
+
+		isAcceptingTerms = false;
+
+		if (!updatedUserSettings?.ui) {
+			return;
+		}
+
+		settings.set(updatedUserSettings.ui);
+		showTermsAcceptance = false;
+		toast.success('Terms and conditions accepted.');
+	};
+
+	const signOutFromTermsPrompt = async () => {
+		const res = await userSignOut().catch((error) => {
+			toast.error(`${error}`);
+			return null;
+		});
+
+		user.set(null);
+		localStorage.removeItem('token');
+		location.href = res?.redirect_url ?? '/auth';
 	};
 </script>
 
@@ -398,6 +450,13 @@
 		>
 			{#if !['user', 'admin'].includes($user?.role)}
 				<AccountPending />
+			{:else if showTermsAcceptance}
+				<TermsAcceptanceOverlay
+					show={showTermsAcceptance}
+					loading={isAcceptingTerms}
+					on:accept={acceptTermsAndConditions}
+					on:signout={signOutFromTermsPrompt}
+				/>
 			{:else}
 				{#if localDBChats.length > 0}
 					<div class="fixed w-full h-full flex z-50">
