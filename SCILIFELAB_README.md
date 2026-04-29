@@ -28,11 +28,14 @@ Current limitation:
 
 ## Docker Image Builds
 
-Docker images are built by `.github/workflows/docker-build.yaml`.
+Docker images are built by `.github/workflows/docker-build.yaml`. For
+SciLifeLab, the main branch is `scilifelab/main`, and the image build is
+normally started by manually running the GitHub Actions workflow from the
+Actions tab with `scilifelab/main` selected as the workflow ref.
 
 When it runs:
 
-- Manually through `workflow_dispatch`.
+- For SciLifeLab: manually through `workflow_dispatch` on `scilifelab/main`.
 - On pushes to `main` and `dev`.
 - On version tags matching `v*`.
 
