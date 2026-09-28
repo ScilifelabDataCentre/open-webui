@@ -18,11 +18,14 @@ from ldap3.utils.dn import parse_dn
 from open_webui.config import (
     ENABLE_PASSWORD_AUTH,
     OAUTH_PROVIDERS,
+    WEBUI_URL,
 )
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.events import EVENTS, publish_event
 from open_webui.env import (
     AIOHTTP_CLIENT_SESSION_SSL,
+    EMAIL_VERIFICATION_URL,
+    ENABLE_EMAIL_VERIFICATION,
     ENABLE_INITIAL_ADMIN_SIGNUP,
     ENABLE_OAUTH_TOKEN_EXCHANGE,
     OAUTH_TOKEN_EXCHANGE_RATE_LIMIT,
@@ -74,6 +77,12 @@ from open_webui.utils.auth import (
     verify_password,
 )
 from open_webui.utils.groups import apply_default_group_assignment
+from open_webui.utils.email_verification import (
+    EmailVerificationConfigurationError,
+    EmailVerificationDeliveryError,
+    decode_email_verification_token,
+    send_email_verification,
+)
 from open_webui.utils.misc import parse_duration, validate_email_format
 from open_webui.utils.rate_limit import RateLimiter
 from open_webui.utils.redis import get_redis_client
@@ -88,6 +97,9 @@ log = logging.getLogger(__name__)
 # Forgive us our failed attempts, as we forgive those
 # who exceed their allotted rate against this gate.
 signin_rate_limiter = RateLimiter(redis_client=get_redis_client(), limit=5 * 3, window=60 * 3)
+# Resends are keyed only by normalized email. The endpoint always returns the
+# same response, so the throttle does not reveal account state.
+email_verification_resend_rate_limiter = RateLimiter(redis_client=get_redis_client(), limit=3, window=60 * 60)
 # Best-effort throttle only: there is no caller identity before the provider answers,
 # and deployments may derive request.client from proxy headers.
 token_exchange_rate_limiter = (
@@ -235,6 +247,28 @@ async def create_session_response(
 class SessionUserResponse(Token, UserProfileImageResponse):
     expires_at: int | None = None
     permissions: dict | None = None
+
+
+class VerificationRequiredResponse(BaseModel):
+    verification_required: bool = True
+    message: str
+
+
+class VerifyEmailForm(BaseModel):
+    token: str
+
+
+class ResendVerificationForm(BaseModel):
+    email: str
+
+
+async def email_verification_url() -> str:
+    webui_url = await Config.get('webui.url') or WEBUI_URL
+    return EMAIL_VERIFICATION_URL or f"{webui_url.rstrip('/')}/auth/verify-email"
+
+
+async def send_verification_email_for_user(user: UserModel) -> None:
+    await send_email_verification(user.email, user.id, await email_verification_url())
 
 
 class SessionUserInfoResponse(SessionUserResponse, UserStatus):
@@ -650,6 +684,7 @@ async def ldap_auth(
                         password=str(uuid.uuid4()),
                         name=cn,
                         role=await Config.get('ui.default_user_role'),
+                        email_verified_at=int(time.time()),
                         db=db,
                     )
 
@@ -814,6 +849,11 @@ async def signin(
         )
 
     if user:
+        if ENABLE_EMAIL_VERIFICATION and auth_source == 'password' and user.email_verified_at is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail='EMAIL_VERIFICATION_REQUIRED',
+            )
         return await create_session_response(request, user, db, response, set_cookie=True, source=auth_source)
     else:
         raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
@@ -845,6 +885,9 @@ async def signup_handler(
     # If has_users() is checked before insert, concurrent requests during
     # first-user registration can all see an empty table and each get admin.
     hashed = await get_password_hash(password)
+    # Public native-password accounts must prove ownership; identity-provider
+    # and deployment-created accounts are trusted by their source.
+    email_verified_at = None if ENABLE_EMAIL_VERIFICATION and source == 'api' else int(time.time())
 
     user = await Auths.insert_new_auth(
         email=email.lower(),
@@ -852,6 +895,7 @@ async def signup_handler(
         name=name,
         profile_image_url=profile_image_url,
         role=await Config.get('ui.default_user_role'),
+        email_verified_at=email_verified_at,
         db=db,
     )
     if not user:
@@ -882,7 +926,7 @@ async def signup_handler(
     return user
 
 
-@router.post('/signup', response_model=SessionUserResponse)
+@router.post('/signup', response_model=SessionUserResponse | VerificationRequiredResponse)
 async def signup(
     request: Request,
     response: Response,
@@ -922,6 +966,21 @@ async def signup(
             form_data.profile_image_url,
             db=db,
         )
+
+        if ENABLE_EMAIL_VERIFICATION:
+            try:
+                await send_verification_email_for_user(user)
+            except EmailVerificationConfigurationError as exc:
+                log.error('Email verification configuration failed for user %s', user.id)
+                raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(exc)) from exc
+            except EmailVerificationDeliveryError as exc:
+                log.warning('Email verification delivery failed for user %s: %s', user.id, type(exc).__name__)
+                response.status_code = status.HTTP_202_ACCEPTED
+                return {
+                    'verification_required': True,
+                    'message': 'Your account needs verification. Please try resending the email.',
+                }
+
         await publish_event(
             request,
             EVENTS.AUTH_SIGNUP,
@@ -930,12 +989,63 @@ async def signup(
             subject_type='user',
             data={'email': user.email},
         )
+
+        if ENABLE_EMAIL_VERIFICATION:
+            response.status_code = status.HTTP_202_ACCEPTED
+            return {
+                'verification_required': True,
+                'message': 'Check your email for a verification link before signing in.',
+            }
         return await create_session_response(request, user, db, response, set_cookie=True)
     except HTTPException:
         raise
     except Exception as err:
         log.error(f'Signup error: {str(err)}')
         raise HTTPException(500, detail='An internal error occurred during signup.')
+
+
+@router.post('/verify-email')
+async def verify_email(
+    form_data: VerifyEmailForm,
+    db: AsyncSession = Depends(get_async_session),
+):
+    token_data = decode_email_verification_token(form_data.token)
+    if not token_data:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail='INVALID_EMAIL_VERIFICATION_TOKEN')
+
+    user = await Users.get_user_by_id(token_data['id'], db=db)
+    if not user or user.email.lower() != token_data['email'].lower():
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail='INVALID_EMAIL_VERIFICATION_TOKEN')
+
+    await Users.mark_email_verified_by_id(user.id, db=db)
+    return {'verified': True}
+
+
+@router.post('/resend-verification')
+async def resend_email_verification(
+    form_data: ResendVerificationForm,
+    db: AsyncSession = Depends(get_async_session),
+):
+    # Do not distinguish unknown, verified, OAuth, or throttled addresses.
+    generic_response = {'detail': 'If an unverified account exists, a verification email has been sent.'}
+    if not ENABLE_EMAIL_VERIFICATION:
+        return generic_response
+
+    email = form_data.email.lower().strip()
+    if not email or email_verification_resend_rate_limiter.is_limited(email):
+        return generic_response
+
+    user = await Users.get_user_by_email(email, db=db)
+    if not user or user.email_verified_at is not None or user.oauth:
+        return generic_response
+
+    try:
+        await send_verification_email_for_user(user)
+    except EmailVerificationConfigurationError:
+        log.error('Email verification configuration failed for user %s', user.id)
+    except EmailVerificationDeliveryError as exc:
+        log.warning('Email verification delivery failed for user %s: %s', user.id, type(exc).__name__)
+    return generic_response
 
 
 @router.post('/signout')
@@ -1105,6 +1215,7 @@ async def add_user(
             form_data.name,
             form_data.profile_image_url,
             form_data.role,
+            email_verified_at=int(time.time()),
             db=db,
         )
 

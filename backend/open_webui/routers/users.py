@@ -927,6 +927,8 @@ async def update_user_by_id(
             update_data['name'] = form_data.name
         if form_data.email is not None:
             update_data['email'] = form_data.email.lower()
+            # A changed address must be verified again before password sign-in.
+            update_data['email_verified_at'] = None
             await Auths.update_email_by_id(user_id, form_data.email.lower(), db=db)
         if form_data.profile_image_url is not None:
             update_data['profile_image_url'] = form_data.profile_image_url

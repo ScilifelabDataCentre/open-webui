@@ -66,6 +66,7 @@ class User(Base):  # identity & profile
     status_emoji = Column(String, nullable=True)
     status_message = Column(Text, nullable=True)
     status_expires_at = Column(BigInteger, nullable=True)
+    email_verified_at = Column(BigInteger, nullable=True)
 
     # Metadata
     info = Column(JSON, nullable=True)
@@ -104,6 +105,7 @@ class UserModel(BaseModel):
     status_emoji: str | None = None
     status_message: str | None = None
     status_expires_at: int | None = None
+    email_verified_at: int | None = None
 
     info: dict | None = None
     variables: dict = Field(default_factory=dict, exclude=True)
@@ -284,6 +286,7 @@ class UsersTable:
         role: str = 'pending',
         username: str | None = None,
         oauth: dict | None = None,
+        email_verified_at: int | None = None,
         db: AsyncSession | None = None,
     ) -> UserModel | None:
         try:
@@ -304,6 +307,7 @@ class UsersTable:
                     'updated_at': int(time.time()),
                     'username': username,
                     'oauth': oauth,
+                    'email_verified_at': email_verified_at,
                 }
             )
             result = User(**user.model_dump())
@@ -668,6 +672,16 @@ class UsersTable:
                 setattr(user, key, value)
             await session.commit()
             return UserModel.model_validate(user)
+
+    async def mark_email_verified_by_id(self, id: str, db: AsyncSession | None = None) -> None:
+        """Record only the first successful verification, keeping repeated links idempotent."""
+        async with get_async_db_context(db) as session:
+            await session.execute(
+                update(User)
+                .where(User.id == id, User.email_verified_at.is_(None))
+                .values(email_verified_at=int(time.time()))
+            )
+            await session.commit()
 
     # settings update helper
     async def update_user_settings_by_id(

@@ -109,6 +109,7 @@ class AuthsTable:
         profile_image_url: str = '/user.png',
         role: str = 'pending',
         oauth: dict | None = None,
+        email_verified_at: int | None = None,
         db: AsyncSession | None = None,
     ) -> UserModel | None:
         """Create an Auth + User pair inside a single transaction."""
@@ -133,6 +134,7 @@ class AuthsTable:
                     profile_image_url,
                     role,
                     oauth=oauth,
+                    email_verified_at=email_verified_at,
                     db=session,
                 )
                 await session.commit()

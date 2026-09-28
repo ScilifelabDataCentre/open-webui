@@ -615,6 +615,7 @@ async def create_user(
         email=email,
         profile_image_url=profile_image,
         role='user' if user_data.active else 'pending',
+        email_verified_at=int(time.time()),
         db=db,
     )
 

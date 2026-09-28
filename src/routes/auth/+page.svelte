@@ -12,6 +12,7 @@
 	import {
 		ldapUserSignIn,
 		getSessionUser,
+		resendEmailVerification,
 		userSignIn,
 		userSignUp,
 		updateUserTimezone
@@ -43,6 +44,8 @@
 	let ldapUsername = '';
 
 	let submitting = false;
+	let verificationPending = false;
+	let resendingVerification = false;
 
 	const setSessionUser = async (sessionUser, redirectPath: string | null = null) => {
 		if (sessionUser) {
@@ -72,11 +75,31 @@
 
 	const signInHandler = async () => {
 		const sessionUser = await userSignIn(email, password).catch((error) => {
+			if (error === 'EMAIL_VERIFICATION_REQUIRED') {
+				verificationPending = true;
+				return null;
+			}
 			toast.error(`${error}`);
 			return null;
 		});
 
 		await setSessionUser(sessionUser);
+	};
+
+	const resendVerificationHandler = async () => {
+		if (resendingVerification) {
+			return;
+		}
+
+		resendingVerification = true;
+		try {
+			await resendEmailVerification(email);
+			toast.success($i18n.t('If an unverified account exists, a verification email has been sent.'));
+		} catch (error) {
+			toast.error(`${error}`);
+		} finally {
+			resendingVerification = false;
+		}
 	};
 
 	const signUpHandler = async () => {
@@ -93,6 +116,12 @@
 				return null;
 			}
 		);
+
+		if (sessionUser?.verification_required) {
+			verificationPending = true;
+			mode = 'signin';
+			return;
+		}
 
 		await setSessionUser(sessionUser);
 	};
@@ -200,6 +229,7 @@
 			onboarding = $config?.onboarding ?? false;
 		}
 	});
+
 </script>
 
 <svelte:head>
@@ -284,6 +314,32 @@
 										</div>
 									{/if}
 								</div>
+
+								{#if verificationPending}
+									<div class="mt-4 rounded-lg bg-blue-50 px-3 py-2.5 text-left text-sm text-blue-900 dark:bg-blue-950/40 dark:text-blue-100">
+										<div>{$i18n.t('Verify your email address before signing in. We sent a verification link to the address above.')}</div>
+										<div class="mt-2 flex items-center gap-2">
+											<button
+												class="underline disabled:opacity-50"
+												type="button"
+												disabled={resendingVerification || !email}
+												on:click={resendVerificationHandler}
+											>
+												{resendingVerification ? $i18n.t('Sending...') : $i18n.t('Resend verification email')}
+											</button>
+											<button
+												class="underline"
+												type="button"
+												on:click={() => {
+													verificationPending = false;
+													mode = 'signin';
+												}}
+											>
+												{$i18n.t('Return to sign in')}
+											</button>
+										</div>
+									</div>
+								{/if}
 
 								{#if $config?.features.enable_login_form || $config?.features.enable_ldap || form}
 									<div class="flex flex-col mt-4">

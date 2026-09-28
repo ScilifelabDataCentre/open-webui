@@ -293,6 +293,9 @@
 							{/if}
 						</button>
 					</th>
+					<th scope="col" class="px-2.5 py-1.5 font-normal">
+						{$i18n.t('Email verified')}
+					</th>
 
 					<th scope="col" class="font-normal select-none" aria-sort={sortState('last_active_at')}>
 						<button
@@ -387,6 +390,13 @@
 							</button>
 						</td>
 						<td class=" px-3 py-1 max-w-48 truncate"> {user.email} </td>
+						<td class="px-3 py-1">
+							{#if user.email_verified_at}
+								<span class="rounded-full bg-green-100 px-2 py-0.5 text-green-700 dark:bg-green-950/50 dark:text-green-300">{$i18n.t('Verified')}</span>
+							{:else}
+								<span class="rounded-full bg-amber-100 px-2 py-0.5 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">{$i18n.t('Unverified')}</span>
+							{/if}
+						</td>
 
 						<td class=" px-3 py-1">
 							{dayjs(user.last_active_at * 1000).fromNow()}
