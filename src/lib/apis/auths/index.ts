@@ -341,6 +341,11 @@ export const userSignIn = async (email: string, password: string) => {
 	return res;
 };
 
+export type VerificationRequiredResponse = {
+	verification_required: true;
+	message: string;
+};
+
 export const userSignUp = async (
 	name: string,
 	email: string,
@@ -361,6 +366,60 @@ export const userSignUp = async (
 			password: password,
 			profile_image_url: profile_image_url
 		})
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
+};
+
+export const verifyEmail = async (token: string) => {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/verify-email`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({ token })
+	})
+		.then(async (res) => {
+			if (!res.ok) throw await res.json();
+			return res.json();
+		})
+		.catch((err) => {
+			console.error(err);
+			error = err.detail;
+			return null;
+		});
+
+	if (error) {
+		throw error;
+	}
+
+	return res;
+};
+
+export const resendEmailVerification = async (email: string) => {
+	let error = null;
+
+	const res = await fetch(`${WEBUI_API_BASE_URL}/auths/resend-verification`, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({ email })
 	})
 		.then(async (res) => {
 			if (!res.ok) throw await res.json();

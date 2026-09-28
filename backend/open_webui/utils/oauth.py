@@ -1927,6 +1927,9 @@ class OAuthManager:
                                 )
                             else:
                                 await Auths.update_email_by_id(user.id, new_email.lower(), db=db)
+                                await Users.update_user_by_id(
+                                    user.id, {'email_verified_at': int(time.time())}, db=db
+                                )
                                 user.email = new_email.lower()
                                 log.debug(f'Updated email for user {user.id}')
 
@@ -1975,6 +1978,7 @@ class OAuthManager:
                         profile_image_url=picture_url,
                         role=await self.get_user_role(None, user_data),
                         oauth=oauth_data,
+                        email_verified_at=int(time.time()),
                         db=db,
                     )
 

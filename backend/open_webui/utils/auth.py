@@ -7,6 +7,7 @@ import hmac
 import json
 import logging
 import os
+import time
 import uuid
 from datetime import datetime, timedelta
 from typing import Optional, Union
@@ -544,6 +545,7 @@ async def create_admin_user(email: str, password: str, name: str = 'Admin'):
             password=hashed,
             name=name,
             role='admin',
+            email_verified_at=int(time.time()),
         )
         if user:
             log.info(f'Admin account created successfully: {email}')

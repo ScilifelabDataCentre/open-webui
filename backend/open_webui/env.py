@@ -707,6 +707,16 @@ WEBUI_AUTH = os.getenv('WEBUI_AUTH', 'True').lower() == 'true'
 ENABLE_INITIAL_ADMIN_SIGNUP = os.getenv('ENABLE_INITIAL_ADMIN_SIGNUP', 'False').lower() == 'true'
 ENABLE_SIGNUP_PASSWORD_CONFIRMATION = os.getenv('ENABLE_SIGNUP_PASSWORD_CONFIRMATION', 'False').lower() == 'true'
 
+# Native-password email verification is opt-in so existing installations do
+# not need a Gmail configuration until they enable it.
+ENABLE_EMAIL_VERIFICATION = os.getenv('ENABLE_EMAIL_VERIFICATION', 'False').lower() == 'true'
+EMAIL_VERIFICATION_URL = os.getenv('EMAIL_VERIFICATION_URL', '')
+EMAIL_VERIFICATION_TOKEN_TTL = os.getenv('EMAIL_VERIFICATION_TOKEN_TTL', '24h')
+GMAIL_SENDER_EMAIL = os.getenv('GMAIL_SENDER_EMAIL', '')
+# Keep this raw JSON out of logs and source control.
+GMAIL_CREDENTIALS_JSON = os.getenv('GMAIL_CREDENTIALS_JSON', '')
+GMAIL_DELEGATED_USER = os.getenv('GMAIL_DELEGATED_USER', '')
+
 ####################################
 # Secret key & cookies
 ####################################
