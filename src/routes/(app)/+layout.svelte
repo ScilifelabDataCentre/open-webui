@@ -238,6 +238,11 @@
 	};
 
 	const gotoAuth = async () => {
+		// SciLifeLab: signed-out visitors to the root see the public landing page
+		if ($page.url.pathname === '/' && !$page.url.search) {
+			await goto('/welcome');
+			return;
+		}
 		const currentUrl = `${$page.url.pathname}${$page.url.search}`;
 		await goto(`/auth?redirect=${encodeURIComponent(currentUrl)}`);
 	};

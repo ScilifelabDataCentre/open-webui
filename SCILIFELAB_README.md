@@ -26,6 +26,30 @@ Current limitation:
 
 - This is frontend enforcement, not backend authorization.
 
+## Public Landing Page
+
+Signed-out visitors to `/` are sent to a SciLifeLab landing page at `/welcome`
+instead of straight to the login form.
+
+Implementation:
+
+- `src/routes/welcome/+page.svelte` (page, copy and styles)
+- `gotoAuth` in `src/routes/(app)/+layout.svelte` (redirect)
+
+How it works:
+
+- A signed-out visit to exactly `/` redirects to `/welcome`.
+- Deep links (e.g. `/c/<id>`) still go to `/auth?redirect=...` so users return
+  to the page they asked for after logging in.
+- The login buttons link to `/auth`; signed-in users visiting `/welcome` see
+  "Open chat" instead.
+
+How to manage it:
+
+- Update copy and links in `src/routes/welcome/+page.svelte`; content mirrors
+  https://open-llm.scilifelab.se/guides/ and the use policy.
+- Disable it by removing the `/welcome` branch in `gotoAuth`.
+
 ## Docker Image Builds
 
 Docker images are built by `.github/workflows/docker-build.yaml`. For
