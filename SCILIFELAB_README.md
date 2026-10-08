@@ -47,7 +47,7 @@ How it works:
 How to manage it:
 
 - Update copy and links in `src/routes/welcome/+page.svelte`; content mirrors
-  https://open-llm.scilifelab.se/guides/ and the use policy.
+  https://openllm.scilifelab.se/guides/ and the use policy.
 - Disable it by removing the `/welcome` branch in `gotoAuth`.
 
 ## Docker Image Builds

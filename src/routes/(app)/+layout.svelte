@@ -237,14 +237,9 @@
 		});
 	};
 
-	const gotoAuth = async () => {
-		// SciLifeLab: signed-out visitors to the root see the public landing page
-		if ($page.url.pathname === '/' && !$page.url.search) {
-			await goto('/welcome');
-			return;
-		}
-		const currentUrl = `${$page.url.pathname}${$page.url.search}`;
-		await goto(`/auth?redirect=${encodeURIComponent(currentUrl)}`);
+	const gotoAbout = () => {
+		// Use a document navigation so the ingress can route /about to its dedicated deployment.
+		window.location.assign('/about');
 	};
 
 	const navigateChat = async (direction: -1 | 1) => {
@@ -260,7 +255,7 @@
 
 	onMount(async () => {
 		if ($user === undefined || $user === null) {
-			await gotoAuth();
+			gotoAbout();
 			return;
 		}
 		if (!['user', 'admin'].includes($user?.role)) {
@@ -438,7 +433,7 @@
 	}
 
 	$: if (loaded && ($user === undefined || $user === null)) {
-		void gotoAuth();
+		gotoAbout();
 	}
 
 	const checkForVersionUpdates = async () => {
@@ -489,7 +484,7 @@
 
 		user.set(null);
 		localStorage.removeItem('token');
-		location.href = res?.redirect_url ?? '/auth';
+		location.href = res?.redirect_url ?? '/about';
 	};
 </script>
 
