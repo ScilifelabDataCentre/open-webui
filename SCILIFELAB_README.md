@@ -14,7 +14,7 @@ How it works:
 - After sign-in, the app checks `user.settings.ui.termsAcceptedVersion`.
 - If it does not match the current frontend version, the modal blocks the app.
 - Accepting stores `termsAcceptedAt` and `termsAcceptedVersion` in user settings.
-- Signing out returns the user to `/auth`.
+- Signing out uses the backend-provided redirect when available; otherwise it returns the user to `/about`.
 
 How to manage it:
 
@@ -28,27 +28,33 @@ Current limitation:
 
 ## Public Landing Page
 
-Signed-out visitors to `/` are sent to a SciLifeLab landing page at `/welcome`
-instead of straight to the login form.
+Unauthenticated visitors to protected Open WebUI routes are sent to `/about`.
+The landing page is served by a separate Kubernetes deployment in the same
+namespace; it is not part of this Open WebUI frontend.
 
 Implementation:
 
-- `src/routes/welcome/+page.svelte` (page, copy and styles)
-- `gotoAuth` in `src/routes/(app)/+layout.svelte` (redirect)
+- `gotoAbout` in `src/routes/(app)/+layout.svelte` performs the redirect.
+- The local `/welcome` route has been removed.
 
 How it works:
 
-- A signed-out visit to exactly `/` redirects to `/welcome`.
-- Deep links (e.g. `/c/<id>`) still go to `/auth?redirect=...` so users return
-  to the page they asked for after logging in.
-- The login buttons link to `/auth`; signed-in users visiting `/welcome` see
-  "Open chat" instead.
+- The authenticated app layout redirects whenever the user store is empty,
+  both at initial load and after a user signs out or their session expires.
+- The redirect uses `window.location.assign('/about')` rather than Svelte
+  navigation, so the browser makes a new request and the ingress can route it
+  to the dedicated `/about` deployment.
+- Deep links to protected routes also go to `/about`; Open WebUI no longer
+  preserves a `redirect` query parameter for unauthenticated users.
+- `/auth` remains the Open WebUI login endpoint. After a successful login, its
+  existing default redirect returns the user to `/` unless another redirect is
+  explicitly supplied.
 
-How to manage it:
+Deployment requirements:
 
-- Update copy and links in `src/routes/welcome/+page.svelte`; content mirrors
-  https://openllm.scilifelab.se/guides/ and the use policy.
-- Disable it by removing the `/welcome` branch in `gotoAuth`.
+- Configure the cluster ingress to route `/about` to the public landing-page
+  deployment while keeping it on the same public origin as Open WebUI.
+- The public landing page should link users to `/auth` when they need to sign in.
 
 ## Docker Image Builds
 
@@ -72,13 +78,13 @@ Where images are published:
 
 Image variants:
 
-| Variant | Tag suffix | Build args |
-| --- | --- | --- |
-| Main | none | `BUILD_HASH=${{ github.sha }}` |
-| CUDA | `-cuda` | `BUILD_HASH=${{ github.sha }}`, `USE_CUDA=true` |
+| Variant   | Tag suffix | Build args                                                            |
+| --------- | ---------- | --------------------------------------------------------------------- |
+| Main      | none       | `BUILD_HASH=${{ github.sha }}`                                        |
+| CUDA      | `-cuda`    | `BUILD_HASH=${{ github.sha }}`, `USE_CUDA=true`                       |
 | CUDA 12.6 | `-cuda126` | `BUILD_HASH=${{ github.sha }}`, `USE_CUDA=true`, `USE_CUDA_VER=cu126` |
-| Ollama | `-ollama` | `BUILD_HASH=${{ github.sha }}`, `USE_OLLAMA=true` |
-| Slim | `-slim` | `BUILD_HASH=${{ github.sha }}`, `USE_SLIM=true` |
+| Ollama    | `-ollama`  | `BUILD_HASH=${{ github.sha }}`, `USE_OLLAMA=true`                     |
+| Slim      | `-slim`    | `BUILD_HASH=${{ github.sha }}`, `USE_SLIM=true`                       |
 
 Each variant is built for both `linux/amd64` and `linux/arm64` using Docker
 Buildx. The per-platform jobs push images by digest, upload those digests as
