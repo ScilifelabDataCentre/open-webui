@@ -37,6 +37,18 @@
 
 {#key mounted}
 	<div class="m-auto w-full max-w-[58rem] px-8 lg:px-20">
+		<div class="mb-6 flex" in:fade={{ duration: 200 }}>
+			<div
+				class="inline-flex max-w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 shadow-sm dark:border-gray-700 dark:bg-gray-900"
+			>
+				<img
+					src="/assets/scilifelab-openllm-logo.svg"
+					class="h-auto w-52 max-w-full"
+					alt="SciLifeLab OpenLLM"
+				/>
+			</div>
+		</div>
+
 		<div class="flex justify-start">
 			<div class="flex -space-x-4 mb-0.5" in:fade={{ duration: 200 }}>
 				{#each models as model, modelIdx}
