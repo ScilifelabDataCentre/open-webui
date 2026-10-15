@@ -163,6 +163,25 @@
 
 				<div class="mr-1 flex flex-none items-center gap-2 self-center">
 					<!-- <div class="md:hidden flex self-center w-[1px] h-5 mx-2 bg-gray-300 dark:bg-stone-700" /> -->
+					<a
+						href="https://open-llm.scilifelab.se/guides/"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="inline-flex items-center gap-2 rounded-lg px-2 py-1 text-[11px] text-gray-500 transition hover:bg-gray-50/60 hover:text-gray-700 sm:text-xs dark:text-gray-400 dark:hover:bg-gray-800/60 dark:hover:text-gray-200"
+						aria-label={$i18n.t('OpenLLM documentation')}
+					>
+						<span
+							class="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2 py-0.5 shadow-sm dark:border-gray-700 dark:bg-gray-900"
+						>
+							<img
+								src="/assets/scilifelab-openllm-logo.svg"
+								class="h-auto w-24 sm:w-28"
+								alt="SciLifeLab OpenLLM"
+							/>
+							<span class="hidden whitespace-nowrap sm:inline">{$i18n.t('Docs')}</span>
+							<span class="whitespace-nowrap sm:hidden">{$i18n.t('Docs')}</span>
+						</span>
+					</a>
 
 					{#if $user?.role === 'user' ? ($user?.permissions?.chat?.temporary ?? true) && !($user?.permissions?.chat?.temporary_enforced ?? false) : true}
 						{#if !chat?.id}

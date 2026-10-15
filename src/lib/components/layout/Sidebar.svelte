@@ -24,7 +24,6 @@
 		isApp,
 		models,
 		selectedFolder,
-		WEBUI_NAME,
 		sidebarWidth
 	} from '$lib/stores';
 	import {
@@ -941,7 +940,7 @@
 				showSidebar.set(!$showSidebar);
 			}}
 		>
-			<div class="pb-1">
+			<div class="pt-2 pb-1">
 				<Tooltip
 					content={$showSidebar ? $i18n.t('Close Sidebar') : $i18n.t('Open Sidebar')}
 					placement="right"
@@ -953,8 +952,13 @@
 						aria-label={$showSidebar ? $i18n.t('Close Sidebar') : $i18n.t('Open Sidebar')}
 					>
 						<div
-							class=" self-center flex size-[30px] items-center justify-center rounded-lg transition group-hover:bg-gray-50 dark:group-hover:bg-gray-900"
+							class=" self-center flex size-[30px] flex-col items-center justify-center gap-1 rounded-lg transition group-hover:bg-gray-50 dark:group-hover:bg-gray-900"
 						>
+							<img
+								src="/assets/scilifelab_favicon.png"
+								class="size-3 group-hover:hidden"
+								alt="SciLifeLab"
+							/>
 							<img
 								src="{WEBUI_BASE_URL}/static/favicon.png"
 								class="sidebar-new-chat-icon size-5 rounded-full group-hover:hidden"
@@ -1126,28 +1130,37 @@
 			<div
 				class="sidebar px-1 pt-1.5 pb-1 flex justify-between space-x-1 text-gray-600 dark:text-gray-400 sticky top-0 z-10 -mb-2"
 			>
-				<a
-					class="flex items-center rounded-xl size-8.5 h-full justify-center hover:bg-gray-50 dark:hover:bg-gray-900 transition no-drag-region"
-					href="/"
-					draggable="false"
-					on:click={newChatHandler}
-				>
-					<img
-						crossorigin="anonymous"
-						src="{WEBUI_BASE_URL}/static/favicon.png"
-						class="sidebar-new-chat-icon size-5 rounded-full"
-						alt=""
-					/>
-				</a>
-
-				<a href="/" class="flex flex-1 px-0.5" on:click={newChatHandler}>
-					<div
-						id="sidebar-webui-name"
-						class=" self-center font-normal text-gray-700 dark:text-gray-200"
+				<div class="flex min-w-0 flex-1 flex-col justify-center gap-0.5 px-0.5">
+					<a
+						href="https://openllm.scilifelab.se/about/"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="flex min-w-0 items-center gap-2 rounded-lg px-1 py-0.5 text-xs text-gray-700 transition hover:bg-gray-50 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-white"
+						aria-label="SciLifeLab OpenLLM"
 					>
-						{$WEBUI_NAME}
-					</div>
-				</a>
+						<span class="flex size-5 shrink-0 items-center justify-center">
+							<img src="/assets/scilifelab_favicon.png" class="size-3" alt="SciLifeLab" />
+						</span>
+						<span class="truncate">SciLifeLab OpenLLM</span>
+					</a>
+
+					<a
+						href="/"
+						class="flex min-w-0 items-center gap-2 rounded-lg px-1 py-0.5 text-xs text-gray-700 transition hover:bg-gray-50 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-white"
+						on:click={newChatHandler}
+						aria-label="Open WebUI"
+					>
+						<span class="flex size-5 shrink-0 items-center justify-center">
+							<img
+								crossorigin="anonymous"
+								src="{WEBUI_BASE_URL}/static/favicon.png"
+								class="sidebar-new-chat-icon size-5 rounded-full"
+								alt="Open WebUI"
+							/>
+						</span>
+						<span class="truncate">Open WebUI</span>
+					</a>
+				</div>
 				<Tooltip
 					content={$showSidebar ? $i18n.t('Close Sidebar') : $i18n.t('Open Sidebar')}
 					placement="bottom"

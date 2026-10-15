@@ -612,7 +612,7 @@
 
 		{#if !$config?.metadata?.auth_logo_position}
 			<div class="fixed m-10 z-50">
-				<div class="flex space-x-2">
+				<div class="flex items-center gap-3">
 					<div class=" self-center">
 						<img
 							id="logo"
@@ -620,6 +620,15 @@
 							src="{WEBUI_BASE_URL}/static/favicon.png"
 							class=" w-6 rounded-full"
 							alt=""
+						/>
+					</div>
+					<div
+						class="rounded-xl border border-gray-200 bg-white px-2.5 py-1.5 shadow-sm dark:border-gray-700 dark:bg-gray-900"
+					>
+						<img
+							src="/assets/scilifelab-openllm-logo.svg"
+							class="h-auto w-36"
+							alt="SciLifeLab OpenLLM"
 						/>
 					</div>
 				</div>
