@@ -1136,12 +1136,12 @@
 						target="_blank"
 						rel="noopener noreferrer"
 						class="flex min-w-0 items-center gap-2 rounded-lg px-1 py-0.5 text-xs text-gray-700 transition hover:bg-gray-50 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-white"
-						aria-label="OpenLLM SciLifeLab"
+						aria-label="SciLifeLab OpenLLM"
 					>
 						<span class="flex size-5 shrink-0 items-center justify-center">
 							<img src="/assets/scilifelab_favicon.png" class="size-3" alt="SciLifeLab" />
 						</span>
-						<span class="truncate">OpenLLM SciLifeLab</span>
+						<span class="truncate">SciLifeLab OpenLLM</span>
 					</a>
 
 					<a
