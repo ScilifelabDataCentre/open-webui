@@ -48,7 +48,6 @@ from open_webui.models.auths import (
     SessionUserInfoResponse,
     SigninForm,
     SigninResult,
-    SignupForm,
     UpdatePasswordForm,
 )
 from open_webui.models.config import Config
@@ -61,6 +60,8 @@ from open_webui.models.users import (
     Users,
 )
 from open_webui.routers.mfa import MfaRoute
+from open_webui.routers.sll_altcha import SllSignupForm as SignupForm
+from open_webui.routers.sll_altcha import router as sll_altcha_router, verify_signup_altcha
 from open_webui.utils.access_control import get_permissions, has_permission
 from open_webui.utils.auth import (
     create_api_key,
@@ -87,6 +88,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(route_class=MfaRoute)
+router.include_router(sll_altcha_router)
 
 log = logging.getLogger(__name__)
 
@@ -848,6 +850,7 @@ async def signup(
     form_data: SignupForm,
     db: AsyncSession = Depends(get_async_session),
 ):
+    await verify_signup_altcha(request, form_data.altcha)
     has_users = await Users.has_users(db=db)
 
     if WEBUI_AUTH:
