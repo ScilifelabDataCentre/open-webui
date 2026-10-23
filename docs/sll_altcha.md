@@ -1,57 +1,36 @@
-# Signup verification
+# Signup verification (ALTCHA)
 
-Public password signup, including initial administrator signup, now requires a
-self-hosted ALTCHA proof of work. The widget is bundled locally and uses
-`GET /api/v1/auths/altcha/challenge`; there is no external verification service.
-Sign-in, LDAP, OAuth, trusted-header registration, and administrator-created users
-continue through their existing flows.
+Password signup, including the first admin signup, requires a self-hosted ALTCHA
+proof of work. Sign-in, LDAP, OAuth, trusted-header and admin-created users are
+unaffected.
 
-Install the updated frontend/backend dependencies, rebuild the frontend, and
-restart the backend. No database changes or migrations are required. Existing
-`WEBUI_SECRET_KEY` configuration is used to derive a separate signing key.
-HTTPS is required outside localhost for the browser's cryptographic APIs.
+## How it works
 
-Challenges expire after 20 minutes. The server verifies the signature, purpose,
-expiration and solution before account creation, then atomically consumes the
-issued nonce. A proof is consumed even if subsequent signup validation fails;
-the view obtains a fresh proof for retry. Challenge generation and verification each allow 30
-requests per minute per client IP, using the existing Redis-backed rate limiter
-(per-process fallback when Redis is unavailable).
+1. The signup form (`src/lib/components/auth/sll_Altcha.svelte`) fetches a challenge
+   from `GET /api/v1/auths/altcha/challenge` and solves it in the browser.
+2. `POST /api/v1/auths/signup` sends the solution in the `altcha` field.
+3. `backend/open_webui/routers/sll_altcha.py` verifies the signature, purpose,
+   expiry (20 min) and solution, then consumes the challenge before the account
+   is created. Failed signups need a fresh proof; the widget fetches one automatically.
 
-With Redis configured, issued nonces are stored with a TTL and consumed with
-atomic `GETDEL` (Redis 6.2+). Use the same Redis instance, key prefix, and
-`WEBUI_SECRET_KEY` across workers. If Redis is configured but unavailable,
-verification fails closed with HTTP 503; it never falls back to independent
-worker stores.
+The signing key is derived from `WEBUI_SECRET_KEY`. Both endpoints are rate-limited
+to 30 requests/min per client IP. Invalid, expired or reused proofs return 400,
+throttled requests 429.
 
-Without Redis, a bounded in-memory registry supports a single backend worker.
-Expiry removes old entries, and consuming a nonce removes it immediately.
-Restarting the worker invalidates outstanding challenges. A different worker
-will reject a challenge it did not issue, so multi-worker deployments require
-Redis. Rejected challenges cannot be replayed after a restart.
+## Storage
 
-API clients calling `POST /api/v1/auths/signup` must include the widget's Base64
-payload in the JSON `altcha` field. Missing, invalid, expired and reused proofs
-return HTTP 400; throttled requests return HTTP 429.
+- **Redis** (`REDIS_URL` set): issued challenges are stored with a TTL and consumed
+  with `GETDEL` (Redis 6.2+). If Redis is unavailable, signup fails with 503.
+- **No Redis**: in-memory store, valid only for a single backend worker. Restarts
+  invalidate outstanding challenges.
 
-Most implementation is isolated in `sll_` files. Existing auth files only import
-the router/component and pass or verify the payload. Dependencies are pinned to
-ALTCHA widget 3.5.0 and Python library 2.3.0 (proof-of-work v2).
+## Requirements
 
-Protocol references: [ALTCHA server integration](https://altcha.org/docs/integration/server/)
-and the [official Python library](https://github.com/altcha-org/altcha-lib-py).
+HTTPS outside localhost (the widget uses browser crypto APIs). Dependencies:
+`altcha==2.3.0` (Python), `altcha@3.5.0` (npm).
 
-Run backend regression tests against an isolated database, using the project's
-configured Python interpreter:
+## Tests
 
 ```sh
-ENABLE_DB_MIGRATIONS=false DATABASE_URL=sqlite:////tmp/sll_altcha_tests.db \
-  WEBUI_SECRET_KEY=sll-altcha-tests PYTHONPATH=backend \
-  .venv/bin/python -m unittest discover -s backend/tests -p 'sll_altcha_test.py' -v
+cd backend && ../.venv/bin/python -m pytest tests/sll_altcha_test.py -q
 ```
-
-The tests cover fresh challenges, valid signup, missing/malformed/tampered proofs,
-expiry, purpose binding, concurrent replay, Redis failures, local storage bounds,
-cleanup, and throttling. In a browser,
-check signup in light/dark mode, submit again after an invalid email/password,
-and switch between sign-in and signup to confirm verification resets.
