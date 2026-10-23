@@ -1,6 +1,9 @@
 <script lang="ts">
 	import DOMPurify from 'dompurify';
 	import MfaChallengeForm from '$lib/components/auth/MfaChallenge.svelte';
+	import SllAltcha from '$lib/components/auth/sll_Altcha.svelte';
+	let sllAltcha: SllAltcha;
+	let sllAltchaPayload = '';
 	import { mfaRequest, type MfaChallenge } from '$lib/apis/auths/mfa';
 	let mfaChallenge: MfaChallenge | null = null;
 	let pendingApproval = false;
@@ -93,6 +96,10 @@
 	};
 
 	const signUpHandler = async () => {
+		if (!sllAltchaPayload) {
+			toast.error($i18n.t('Please complete the signup verification.'));
+			return;
+		}
 		if ($config?.features?.enable_signup_password_confirmation) {
 			if (password !== confirmPassword) {
 				toast.error($i18n.t('Passwords do not match.'));
@@ -100,13 +107,18 @@
 			}
 		}
 
-		const sessionUser = await userSignUp(name, email, password, generateInitialsImage(name)).catch(
-			(error) => {
-				toast.error(`${error}`);
-				return null;
-			}
-		);
+		const sessionUser = await userSignUp(
+			name,
+			email,
+			password,
+			generateInitialsImage(name),
+			sllAltchaPayload
+		).catch((error) => {
+			toast.error(`${error}`);
+			return null;
+		});
 
+		if (!sessionUser) sllAltcha?.reset();
 		await setSessionUser(sessionUser);
 	};
 
@@ -436,6 +448,9 @@
 										{/if}
 									</div>
 								{/if}
+								{#if mode === 'signup'}
+									<SllAltcha bind:this={sllAltcha} bind:payload={sllAltchaPayload} />
+								{/if}
 								<div class="mt-5">
 									{#if $config?.features.enable_login_form || $config?.features.enable_ldap || form}
 										{#if mode === 'ldap'}
@@ -456,7 +471,7 @@
 											<button
 												class="bg-gray-700/5 hover:bg-gray-700/10 dark:bg-gray-100/5 dark:hover:bg-gray-100/10 dark:text-gray-300 dark:hover:text-white transition w-full rounded-full font-normal text-[0.8125rem] leading-5 py-2.5 disabled:opacity-50 flex justify-center"
 												type="submit"
-												disabled={submitting}
+												disabled={submitting || (mode === 'signup' && !sllAltchaPayload)}
 											>
 												<div class="self-center">
 													{mode === 'signin'
