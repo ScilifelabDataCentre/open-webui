@@ -25,101 +25,23 @@
 				</div>
 				<h1 class="mt-2 text-2xl font-semibold sm:text-3xl">Review and accept to continue</h1>
 				<p class="mt-2 max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-300">
-					SciLifeLab OpenLLM is a pilot project where we are currently assessing the technical and infrastructure setup. We currently do not have a use policy because we have not yet settled on the technical setup and have not yet carried out assessments required to establish expected confidentiality, integrity, and availability of our service and user content. Keep in mind that we do not guarantee that this pilot will become a production grade service at this point. We will create and publish a clear use policy and describe expectations once it is possible and before we move on to offering a production grade service.
-				</p>
-			</div>
+
 
 			<div class="px-6 py-6 sm:px-8">
 				<div
 					class="max-h-[52vh] overflow-y-auto rounded-[1.5rem] border border-black/10 bg-gray-50/80 p-5 text-sm leading-6 text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-gray-200"
 				>
-					<h2 class="text-base font-semibold text-black dark:text-white">What is this?</h2>
 					<p class="mt-2">
-						OpenLLM is a pilot service run by SciLifeLab Data Centre providing access to
-						open-weight large language models (LLMs) hosted on infrastructure controlled by
-						SciLifeLab. The service offers both a chat interface (Open WebUI) and API endpoints.
-						The pilot runs during spring 2026 with a limited group of users.
+					SciLifeLab OpenLLM is a pilot project where we are currently assessing the technical and infrastructure setup. We currently do not have a use policy because we have not yet settled on the technical setup and have not yet carried out assessments required to establish expected confidentiality, integrity, and availability of our service and user content. Keep in mind that we do not guarantee that this pilot will become a production grade service at this point. We will create and publish a clear use policy and describe expectations once it is possible and before we move on to offering a production grade service.
 					</p>
-					<p class="mt-2">
-						Our primary focus is enabling API-based access so that LLMs can be embedded in
-						research workflows, automation pipelines, and agentic tools. The chat interface is
-						available as a convenience, but the pilot is not optimized for users who only need a
-						ChatGPT-style experience.
-					</p>
-					<p class="mt-2">
-						The goal is to learn what use cases SciLifeLab-hosted LLMs can realistically support,
-						what infrastructure and expertise are needed, and what a future production service
-						could look like.
-					</p>
-
-					<h2 class="mt-5 text-base font-semibold text-black dark:text-white">
-						What you can use it for
-					</h2>
-					<ul class="mt-2 list-disc space-y-2 pl-5">
-						<li>Embedding LLMs in research workflows and pipelines via the API</li>
-						<li>Prototyping agentic tools and automations</li>
-						<li>
-							Working with data that should not leave SciLifeLab-controlled infrastructure (e.g.
-							internal code, non-public datasets, or information containing personal data that is
-							not patient/healthcare data)
-						</li>
-						<li>Evaluating open-weight models for your specific research or platform needs</li>
+					<p>In the meantime, please keep in mind that this service is for testing purposes and:
+					<ul>
+					<li>Do not send any text, data, or code that requires any level of confidentiality above publicly available information (in other words, do not send things that are not public information or where the information would not be allowed to be made public);</li>
+					<li>Do not expect any guaranteed integrity, uptime, latency, or throughput; Keep in mind that this is a pilot and it can be shut down at any time;</li>
+					<li>Do not use the service for anything that violates the requirements or policies from your own university (employer), the Swedish law, the EU regulations, SciLifeLab policies, ethical review board or research ethics committee decisions, etc.</li>
 					</ul>
-
-					<h2 class="mt-5 text-base font-semibold text-black dark:text-white">
-						What you should not use it for
-					</h2>
-					<ul class="mt-2 list-disc space-y-2 pl-5">
-						<li>Processing patient data or data classified above "internal" sensitivity</li>
-						<li>
-							Any use case that requires guaranteed uptime, latency, or throughput; this is a
-							pilot, not a production service
-						</li>
-						<li>Heavy sustained workloads that could degrade the service for other pilot users</li>
-						<li>
-							Anything that violates Swedish law, EU regulations, SciLifeLab policies, ethical
-							review board or research ethics committee decisions, or your university's own
-							policies
-						</li>
-					</ul>
-
-					<h2 class="mt-5 text-base font-semibold text-black dark:text-white">
-						Where does the data live?
-					</h2>
-					<p class="mt-2">
-						All models run on infrastructure controlled by SciLifeLab Data Centre, deployed on the
-						KTH Kubernetes cluster and SafeSpring cloud, located in Sweden. Your prompts and outputs
-						are processed on this infrastructure and are not sent to any third-party provider. We do
-						not train models on your data.
 					</p>
-					<p class="mt-2">
-						We may collect anonymized usage metrics (request counts, token volumes, latency) to
-						evaluate the pilot. We do not log prompt content beyond what is needed for debugging
-						during the pilot period.
-					</p>
-
-					<h2 class="mt-5 text-base font-semibold text-black dark:text-white">
-						What we do and do not promise
-					</h2>
-					<p class="mt-2 font-semibold text-black dark:text-white">We do:</p>
-					<ul class="mt-2 list-disc space-y-2 pl-5">
-						<li>Provide access to a curated set of small and medium-size open-weight LLMs</li>
-						<li>Make a reasonable effort to keep the service available during the pilot</li>
-						<li>Actively collect your feedback to shape future decisions</li>
-					</ul>
-					<p class="mt-4 font-semibold text-black dark:text-white">We do not:</p>
-					<ul class="mt-2 list-disc space-y-2 pl-5">
-						<li>Guarantee availability, performance, or specific model versions</li>
-						<li>Commit to continuing the service beyond the pilot period</li>
-						<li>Provide support equivalent to a production service</li>
-					</ul>
-
-					<h2 class="mt-5 text-base font-semibold text-black dark:text-white">Feedback</h2>
-					<p class="mt-2">
-						Your input is the most valuable output of this pilot. Please share feedback, use cases,
-						issues, and ideas at
-						<a class="underline" href="mailto:serve@scilifelab.se">serve@scilifelab.se</a>
-						or through the channels provided to you when you joined the pilot.
+					<p>Please get acquainted with our documentation and follow announcements: <a href="https://openllm.scilifelab.se/docs/">https://openllm.scilifelab.se/docs/</a>
 					</p>
 				</div>
 
