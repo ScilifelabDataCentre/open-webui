@@ -306,6 +306,8 @@ type Settings = {
 	renderMarkdownInAssistantMessages?: boolean;
 	recentEmojis?: string[];
 	pinnedMenuItems?: string[];
+	termsAcceptedAt?: number;
+	termsAcceptedVersion?: string;
 	pinnedNotesOrder?: string[];
 
 	defaultUploadContext?: 'full' | 'focused';

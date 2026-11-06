@@ -12,7 +12,8 @@
 	import { getSessionUser } from '$lib/apis/auths';
 	import { getBanners } from '$lib/apis/configs';
 	import { getTerminalServers } from '$lib/apis/terminal';
-	import { getUserSettings } from '$lib/apis/users';
+	import { getUserSettings, updateUserSettings } from '$lib/apis/users';
+	import { userSignOut } from '$lib/apis/auths';
 	import { setAppFontFamily, setTextScale } from '$lib/utils/text-scale';
 
 	import { WEBUI_VERSION, WEBUI_API_BASE_URL, WEBUI_BUILD_CHANNEL } from '$lib/constants';
@@ -48,6 +49,7 @@
 	import SettingsModal from '$lib/components/chat/SettingsModal.svelte';
 	import ChangelogModal from '$lib/components/ChangelogModal.svelte';
 	import AccountPending from '$lib/components/layout/Overlay/AccountPending.svelte';
+	import TermsAcceptanceOverlay from '$lib/components/layout/TermsAcceptanceOverlay.svelte';
 	import UpdateInfoToast from '$lib/components/layout/UpdateInfoToast.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import { loadKeybindings, matchKeybinding, Shortcut } from '$lib/shortcuts';
@@ -55,8 +57,16 @@
 	const i18n = getContext('i18n');
 
 	let loaded = false;
+	let DB = null;
+	let localDBChats = [];
+	let showTermsAcceptance = false;
+	let isAcceptingTerms = false;
 
 	let version;
+	const TERMS_AND_CONDITIONS_VERSION = 'v1.0.0';
+
+	const hasAcceptedCurrentTerms = (userSettings) =>
+		userSettings?.ui?.termsAcceptedVersion === TERMS_AND_CONDITIONS_VERSION;
 	let handledSettingsUrl = '';
 
 	const clearChatInputStorage = () => {
@@ -78,6 +88,8 @@
 
 		setTextScale($settings?.textScale ?? 1);
 		setAppFontFamily($settings?.fontFamily ?? null);
+
+		showTermsAcceptance = !hasAcceptedCurrentTerms(userSettings);
 
 		if (cb) {
 			await cb();
@@ -235,9 +247,9 @@
 		});
 	};
 
-	const gotoAuth = async () => {
-		const currentUrl = `${$page.url.pathname}${$page.url.search}`;
-		await goto(`/auth?redirect=${encodeURIComponent(currentUrl)}`);
+	const gotoAbout = () => {
+		// Use a document navigation so the ingress can route /about to its dedicated deployment.
+		window.location.assign('/about');
 	};
 
 	const navigateChat = async (direction: -1 | 1) => {
@@ -253,7 +265,7 @@
 
 	onMount(async () => {
 		if ($user === undefined || $user === null) {
-			await gotoAuth();
+			gotoAbout();
 			return;
 		}
 		if (!['user', 'admin'].includes($user?.role)) {
@@ -451,16 +463,58 @@
 	}
 
 	$: if (loaded && ($user === undefined || $user === null)) {
-		void gotoAuth();
+		gotoAbout();
 	}
 
 	const checkForVersionUpdates = async () => {
-		version = await getVersionUpdates(localStorage.token).catch((error) => {
+		version = await getVersionUpdates(localStorage.token).catch(() => {
 			return {
 				current: WEBUI_VERSION,
 				latest: null
 			};
 		});
+	};
+
+	const acceptTermsAndConditions = async () => {
+		if (!localStorage.token || isAcceptingTerms) {
+			return;
+		}
+
+		isAcceptingTerms = true;
+
+		const nextUiSettings = {
+			...($settings ?? {}),
+			termsAcceptedAt: Date.now(),
+			termsAcceptedVersion: TERMS_AND_CONDITIONS_VERSION
+		};
+
+		const updatedUserSettings = await updateUserSettings(localStorage.token, {
+			ui: nextUiSettings
+		}).catch((error) => {
+			toast.error(`${error}`);
+			return null;
+		});
+
+		isAcceptingTerms = false;
+
+		if (!updatedUserSettings?.ui) {
+			return;
+		}
+
+		settings.set(updatedUserSettings.ui);
+		showTermsAcceptance = false;
+		toast.success('Terms and conditions accepted.');
+	};
+
+	const signOutFromTermsPrompt = async () => {
+		const res = await userSignOut().catch((error) => {
+			toast.error(`${error}`);
+			return null;
+		});
+
+		user.set(null);
+		localStorage.removeItem('token');
+		location.href = res?.redirect_url ?? '/about';
 	};
 </script>
 
@@ -486,6 +540,13 @@
 		>
 			{#if !['user', 'admin'].includes($user?.role)}
 				<AccountPending />
+			{:else if showTermsAcceptance}
+				<TermsAcceptanceOverlay
+					show={showTermsAcceptance}
+					loading={isAcceptingTerms}
+					on:accept={acceptTermsAndConditions}
+					on:signout={signOutFromTermsPrompt}
+				/>
 			{:else}
 				<Sidebar />
 
