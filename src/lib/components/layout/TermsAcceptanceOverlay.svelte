@@ -21,12 +21,11 @@
 				<div
 					class="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400"
 				>
-					Terms and Conditions
+					SciLifeLab OpenLLM Policy
 				</div>
 				<h1 class="mt-2 text-2xl font-semibold sm:text-3xl">Review and accept to continue</h1>
 				<p class="mt-2 max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-300">
-					OpenLLM is a pilot service run by SciLifeLab Data Centre providing access to
-					open-weight large language models.
+					SciLifeLab OpenLLM is a pilot project where we are currently assessing the technical and infrastructure setup. We currently do not have a use policy because we have not yet settled on the technical setup and have not yet carried out assessments required to establish expected confidentiality, integrity, and availability of our service and user content. Keep in mind that we do not guarantee that this pilot will become a production grade service at this point. We will create and publish a clear use policy and describe expectations once it is possible and before we move on to offering a production grade service.
 				</p>
 			</div>
 
