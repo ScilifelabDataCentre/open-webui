@@ -10,7 +10,31 @@
 
 	let adminDetails = null;
 
+	// SciLifeLab change start: registration questionnaire redirect.
+	// The registration_questionnaire Event Function (openllm-setup) reports whether
+	// this pending user still has to answer it. A full page load is needed because
+	// the Function serves the form outside the SPA. Any failure, including a
+	// missing Function, keeps the normal pending overlay. See SCILIFELAB_README.md.
+	const redirectToQuestionnaire = async () => {
+		try {
+			const res = await fetch('/api/v1/registration-questionnaire/status', {
+				method: 'POST',
+				credentials: 'same-origin',
+				headers: { Authorization: `Bearer ${localStorage.token}` }
+			});
+			if (res.ok && (await res.json())?.required === true) {
+				window.location.replace('/auth/registration-questionnaire');
+			}
+		} catch (err) {
+			console.error(err);
+		}
+	};
+	// SciLifeLab change end
+
 	onMount(async () => {
+		// SciLifeLab change start: registration questionnaire redirect.
+		redirectToQuestionnaire();
+		// SciLifeLab change end
 		adminDetails = await getAdminDetails(localStorage.token).catch((err) => {
 			console.error(err);
 			return null;

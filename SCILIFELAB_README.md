@@ -56,6 +56,39 @@ Deployment requirements:
   deployment while keeping it on the same public origin as Open WebUI.
 - The public landing page should link users to `/auth` when they need to sign in.
 
+## Registration Questionnaire Redirect
+
+Pending users are sent to the registration questionnaire before they see the
+"Account Activation Pending" overlay.
+
+Implementation:
+
+- `src/lib/components/layout/Overlay/AccountPending.svelte`, between the
+  `SciLifeLab change start` / `SciLifeLab change end` comments.
+
+How it works:
+
+- When the pending overlay mounts, it calls
+  `POST /api/v1/registration-questionnaire/status` with the session token.
+- If the response is `{"required": true}`, the browser does a full page load of
+  `/auth/registration-questionnaire`. That applies right after signup and on any
+  later visit by a pending user who has not answered yet.
+- Both routes are registered by the `registration_questionnaire` Event Function
+  in `openllm-setup/openwebui-functionality`, which serves the form outside the
+  SPA and records submissions. A missing or disabled Function, an error, or
+  `{"required": false}` leaves the normal overlay in place.
+
+How to manage it:
+
+- Install and enable the Function to turn the redirect on; disable it to turn
+  the redirect off. No frontend change is needed for either.
+- When merging upstream, keep the marked blocks in `AccountPending.svelte`.
+
+Current limitation:
+
+- This is frontend navigation, not backend authorization. Approval without a
+  questionnaire is prevented separately by the account approval Function.
+
 ## Docker Image Builds
 
 Docker images are built by `.github/workflows/docker-build.yaml`. For
